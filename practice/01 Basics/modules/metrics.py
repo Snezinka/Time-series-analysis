@@ -46,7 +46,11 @@ def norm_ED_distance(ts1, ts2):
 
     norm_ed_dist = 0
 
-    # INSERT YOUR CODE 
+    mu1, mu2 = np.mean(ts1), np.mean(ts2)
+    sigma1, sigma2 = np.std(ts1), np.std(ts2)
+    m = ts1.shape[0]
+
+    norm_ed_dist = np.sqrt(2 * m * (1 - (np.dot(ts1, ts2.T) - m * mu1 * mu2) / (m * sigma1 * sigma2)))
 
     return norm_ed_dist
 
