@@ -78,8 +78,7 @@ def DTW_distance(ts1, ts2, r=None):
 
     m = ts1.shape[0] + 1
     D = np.zeros((m, m))
-    D[0, 1:] = float('Inf')
-    D[1:, 0] = float('Inf')
+    D[:, :] = float('Inf')
     D[0, 0] = 0
 
     for i in range(1, m):
