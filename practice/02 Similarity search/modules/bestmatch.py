@@ -33,15 +33,12 @@ class BestMatchFinder:
     def __init__(self, ts, query, exclusion_zone=1, top_k=3, normalize=True, r=0.05):
 
         self.query = copy.deepcopy(np.array(query))
-        if (len(ts.shape) == 2):  # time series set
-            self.ts = ts
-        else:
-            self.ts = sliding_window(ts, len(query))
+        self.ts = ts
         self.excl_zone_denom = exclusion_zone
         self.top_k = top_k
         self.normalize = normalize
         self.r = r
-        self.bestmatch = {"index": None, "distance": None, "subsequence": None}
+        self.bestmatch = {"index": None, "distance": None}
 
     def _apply_exclusion_zone(self, a, idx, excl_zone):
         """
@@ -70,7 +67,7 @@ class BestMatchFinder:
 
         return a
 
-    def _top_k_match(self, distances, m, bsf, excl_zone):
+    def _top_k_match(self, distances, bsf, excl_zone):
         """
         Find the top-k match subsequences.
 
@@ -93,9 +90,6 @@ class BestMatchFinder:
         best_match_results: dict
             Dictionary containing results of algorithm.
         """
-
-        data_len = len(distances)
-        top_k_match = []
 
         distances = np.copy(distances)
         top_k_match_idx = []
@@ -137,28 +131,29 @@ class NaiveBestMatchFinder(BestMatchFinder):
         best_match_results: dict
             Dictionary containing results of the naive algorithm.
         """
-        N, m = self.ts.shape
+
 
         bsf = float("inf")
 
         if (self.excl_zone_denom is None):
             excl_zone = 0
         else:
-            excl_zone = int(np.ceil(m / self.excl_zone_denom))
+            excl_zone = int(np.ceil(len(self.query) / self.excl_zone_denom))
 
         distances = []
-        time_series = []
+        index = []
 
-        for i in range(50):
-            dist = DTW_distance(self.query, self.ts[i])
+        for i in range(len(self.ts) - len(self.query)):
+            sequence = self.ts[i:i + len(self.query)]
+            sequence_index = np.arange(i, i + len(self.query))
+            dist = DTW_distance(self.query, sequence)
             distances.append(dist)
-            time_series.append(self.ts[i])
+            index.append(sequence_index)
 
-        top_k_dist = self._top_k_match(distances, m, bsf, excl_zone)
+        top_k_dist = self._top_k_match(distances, bsf, excl_zone)
 
-        self.bestmatch["index"] = top_k_dist["index"]
+        self.bestmatch["index"] = [index[i] for i in top_k_dist["index"]]
         self.bestmatch["distance"] = top_k_dist["distance"]
-        self.bestmatch["subsequence"] = [time_series[i] for i in top_k_dist["index"]]
 
         return self.bestmatch
 
