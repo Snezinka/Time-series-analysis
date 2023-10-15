@@ -18,10 +18,8 @@ def ED_distance(ts1, ts2):
     ed_dist : float
         Euclidean distance between ts1 and ts2.
     """
-    
-    ed_dist = 0
 
-    # INSERT YOUR CODE
+    ed_dist = np.sqrt(np.sum(np.square(ts1-ts2)))
 
     return ed_dist
 

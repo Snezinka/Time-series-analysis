@@ -289,7 +289,14 @@ def plot_bestmatch_results(ts, query, bestmatch_results):
                      linewidth=1,
                      tickwidth=1,
                      mirror=True)
+
+    fig.update_layout(plot_bgcolor="rgba(0,0,0,0)",
+                      paper_bgcolor='rgba(0,0,0,0)',
+                      showlegend=False,
+                      title_x=0.5)
+
     fig.show(renderer="colab")
+
 
 
 def pie_chart(labels, values, plot_title='Pie chart'):
