@@ -27,13 +27,12 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
     list : snippets
         A list of snippets as dictionary objects with the following structure.
 
-        >>> {
-        >>> 	index: the index of the snippet,
-        >>> 	snippet: the snippet values,
-        >>>     neighbors: the starting indices of all subsequences similar to the current snippet
-        >>>     fraction: fraction of the snippet
-        >>> }
-
+        {
+            index: the index of the snippet,
+            snippet: the snippet values,
+            neighbors: the starting indices of all subsequences similar to the current snippet
+            fraction: fraction of the snippet
+        }
     """
     ts = core.to_np_array(ts).astype("d")
     time_series_len = len(ts)
@@ -59,16 +58,16 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
     indices = np.arange(0, len(ts) - snippet_size, snippet_size)
     distances = []
 
-    for j, i in enumerate(indices):
+    for i in indices:
         distance = mpdist_vector(ts, ts[i : (i + snippet_size - 1)], int(window_size))
         distances.append(distance)
 
     distances = np.array(distances)
-
     # find N snippets
     snippets = []
     minis = np.inf
     total_min = None
+    index = 0
     for n in range(num_snippets):
         minims = np.inf
 
@@ -83,9 +82,9 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
         actual_index = indices[index]
         snippet = ts[actual_index : actual_index + snippet_size]
         snippet_distance = distances[index]
-        snippets.append(
-            {"index": actual_index, "snippet": snippet, "distance": snippet_distance}
-        )
+        snippets.append({"index": actual_index,
+                         "snippet": snippet,
+                         "distance": snippet_distance})
 
         if isinstance(total_min, type(None)):
             total_min = snippet_distance
@@ -115,46 +114,32 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
 
 # Визуализация сниппетов
 def plot_snippets(ts, snippets):
-    with plt.rc_context(
-        {
-            "text.usetex": True,
-            "text.latex.preamble": r"\usepackage[russian]{babel}",
-            "lines.linewidth": 2,
-            "font.family": "serif",
-            "font.serif": "Computer Modern",
-            "font.size": 36,
-        }
-    ):
-        fig, (ax_main, ax_labels) = plt.subplots(
-            2, figsize=(16, 6), gridspec_kw={"height_ratios": [16, 2]}
-        )
-        color_cycle = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
-        ax_main.plot(ts, color="gray")
+    fig, (ax_main, ax_labels) = plt.subplots(2, figsize=(16, 6), gridspec_kw={"height_ratios": [16, 2]})
+    color_cycle = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
-        labels = np.zeros_like(ts)
-        for i, snippet in enumerate(snippets):
-            color = color_cycle[i]
+    ax_main.plot(ts, color="gray")
 
-            neighbors = np.array(snippet["neighbors"])
-            for neighbor_index in neighbors:
-                labels[neighbor_index] = i
+    labels = np.zeros_like(ts)
+    for i, snippet in enumerate(snippets):
+        color = color_cycle[i]
 
-            snippet_start = snippet["index"]
-            snippet_end = snippet_start + len(snippet["snippet"])
-            ax_main.plot(
-                np.arange(snippet_start, snippet_end),
-                ts[snippet_start:snippet_end],
-                c=color,
-                label=f'Snippet {i}: {snippet["fraction"]:.2f}',
-            )
+        neighbors = np.array(snippet["neighbors"])
+        for neighbor_index in neighbors:
+            labels[neighbor_index] = i
 
-        img = ax_labels.imshow([range(len(color_cycle))], cmap="tab10", aspect="auto")
-        img.set_data([labels])
+        snippet_start = snippet["index"]
+        snippet_end = snippet_start + len(snippet["snippet"])
+        ax_main.plot(np.arange(snippet_start, snippet_end),
+                     ts[snippet_start:snippet_end],
+                     c=color,
+                     label=f'Snippet {i}: {snippet["fraction"]:.2f}')
 
-        ax_main.set_xlim(0, len(ts))
-        ax_labels.axis("off")
-        ax_main.legend(prop={"size": 16}, loc="upper right")
-        plt.tight_layout()
-        plt.show()
+    img = ax_labels.imshow([range(len(color_cycle))], cmap="tab10", aspect="auto")
+    img.set_data([labels])
+
+    ax_main.set_xlim(0, len(ts))
+    ax_labels.axis("off")
+    ax_main.legend(prop={"size": 16}, loc="upper right")
+    plt.tight_layout()
     return ax_main
